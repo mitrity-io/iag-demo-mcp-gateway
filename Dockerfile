@@ -6,8 +6,8 @@ RUN go mod download
 COPY cmd/ cmd/
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -trimpath -o /demo-tools ./cmd/demo-tools
 
-# Pull the pre-built gateway binary from the sentinel image.
-FROM europe-north1-docker.pkg.dev/mitrity-iag-prod/mitrity/gateway:latest AS gateway
+# Pull the pre-built gateway binary from the public ghcr.io image.
+FROM ghcr.io/mitrity-io/mitrity-gateway:latest AS gateway
 
 FROM python:3.12-slim
 
