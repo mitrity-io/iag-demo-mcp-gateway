@@ -133,6 +133,14 @@ class DemoAgent:
         self.client = anthropic.Anthropic()
         self.model = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")
         self.mcp = mcp
+        # Anthropic API doesn't allow ":" in tool names, so we map
+        # "fs:read_file" → "fs__read_file" for the API and back for MCP.
+        self._name_to_api: dict[str, str] = {}
+        self._name_to_mcp: dict[str, str] = {}
+        for t in mcp.tools:
+            api_name = t["name"].replace(":", "__")
+            self._name_to_api[t["name"]] = api_name
+            self._name_to_mcp[api_name] = t["name"]
         self._anthropic_tools = self._convert_tools(mcp.tools)
 
     def run_prompt(self, prompt: str, max_turns: int = 5) -> str:
@@ -174,12 +182,14 @@ class DemoAgent:
             tool_results = []
 
             for tu in tool_uses:
-                result_text, allowed, duration_ms = self.mcp.call_tool(tu.name, tu.input)
+                # Map API name back to MCP namespaced name (e.g. fs__read_file → fs:read_file).
+                mcp_name = self._name_to_mcp.get(tu.name, tu.name)
+                result_text, allowed, duration_ms = self.mcp.call_tool(mcp_name, tu.input)
 
                 if allowed:
-                    tool_allowed(tu.name, result_text, duration_ms)
+                    tool_allowed(mcp_name, result_text, duration_ms)
                 else:
-                    tool_blocked(tu.name, result_text, duration_ms)
+                    tool_blocked(mcp_name, result_text, duration_ms)
 
                 tool_results.append({
                     "type": "tool_result",
@@ -195,13 +205,12 @@ class DemoAgent:
 
         return ""
 
-    @staticmethod
-    def _convert_tools(mcp_tools: list[dict]) -> list[dict]:
+    def _convert_tools(self, mcp_tools: list[dict]) -> list[dict]:
         """Convert MCP tool definitions to Anthropic API format."""
         anthropic_tools = []
         for t in mcp_tools:
             anthropic_tools.append({
-                "name": t["name"],
+                "name": self._name_to_api[t["name"]],
                 "description": t.get("description", ""),
                 "input_schema": t.get("inputSchema", {"type": "object"}),
             })
