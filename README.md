@@ -47,7 +47,7 @@ cp .env.example .env
 # Edit .env with your API keys and IDs
 # ANTHROPIC_API_KEY=sk-ant-...
 # MITRITY_EDGE_API_KEY=mit_...
-# MITRITY_CONTROL_PLANE_URL=https://api.dev.mitrity.com
+# MITRITY_CONTROL_PLANE_URL=https://api.mitrity.com
 # MITRITY_EDGE_NODE_ID=<uuid>
 # MITRITY_AGENT_ID=<uuid>
 
@@ -88,7 +88,7 @@ The gateway connects to your MITRITY control plane via HTTPS for policy evaluati
 |----------|----------|-------------|
 | `ANTHROPIC_API_KEY` | Yes | Anthropic API key for Claude |
 | `MITRITY_EDGE_API_KEY` | Yes | Edge node key from dashboard |
-| `MITRITY_CONTROL_PLANE_URL` | Yes | Control plane URL (e.g., `https://api.dev.mitrity.com`) |
+| `MITRITY_CONTROL_PLANE_URL` | Yes | Control plane URL (e.g., `https://api.mitrity.com`) |
 | `MITRITY_EDGE_NODE_ID` | Yes | Edge node UUID from dashboard |
 | `MITRITY_AGENT_ID` | Yes | Agent UUID from dashboard |
 | `MITRITY_DEMO_SPEED` | No | `normal` (default) or `fast` (skip pauses) |
