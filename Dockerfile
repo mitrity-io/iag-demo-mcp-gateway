@@ -1,4 +1,4 @@
-FROM golang:1.26-alpine AS go-builder
+FROM --platform=linux/amd64 golang:1.26-alpine AS go-builder
 
 WORKDIR /build
 COPY go.mod ./
@@ -7,9 +7,9 @@ COPY cmd/ cmd/
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -trimpath -o /demo-tools ./cmd/demo-tools
 
 # Pull the pre-built gateway binary from the public ghcr.io image.
-FROM ghcr.io/mitrity-io/mitrity-mcp-gateway:latest AS gateway
+FROM --platform=linux/amd64 ghcr.io/mitrity-io/mitrity-mcp-gateway:latest AS gateway
 
-FROM python:3.12-slim
+FROM --platform=linux/amd64 python:3.12-slim
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends gettext-base \
