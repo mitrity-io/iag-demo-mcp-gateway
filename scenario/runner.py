@@ -50,11 +50,18 @@ class MCPClient:
         self.process.stdin.write(line + "\n")
         self.process.stdin.flush()
 
-        # Read response line.
-        resp_line = self.process.stdout.readline()
-        if not resp_line:
-            return None
-        return json.loads(resp_line)
+        # Read lines until we get a JSON-RPC response.
+        # The gateway writes log lines to stdout alongside protocol messages.
+        while True:
+            resp_line = self.process.stdout.readline()
+            if not resp_line:
+                return None
+            resp_line = resp_line.strip()
+            if not resp_line:
+                continue
+            if resp_line.startswith("{"):
+                return json.loads(resp_line)
+            # Skip non-JSON lines (gateway log output).
 
     def _notify(self, method: str, params: dict | None = None) -> None:
         """Send a JSON-RPC notification (no response expected)."""
