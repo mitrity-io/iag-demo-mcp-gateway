@@ -1,6 +1,6 @@
 .env
 *.exe
-demo-tools
+/demo-tools
 __pycache__/
 *.pyc
 .venv/
