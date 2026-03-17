@@ -14,7 +14,7 @@ Before running the demo, configure these in your MITRITY dashboard:
 
 ### 1. Register an agent
 
-Create an agent (e.g., "demo-agent") with mission scope "workspace file management and system operations". Copy the **Agent ID** (UUID) and the **Agent Key** (`ak_...`).
+Create an agent (e.g., "demo-agent") with mission scope "workspace file management and system operations". Copy the **Agent ID** and **Agent Key** (`ak_...`).
 
 ### 2. Create policies
 
@@ -42,9 +42,9 @@ cp .env.example .env
 
 # Edit .env with your API keys and IDs
 # ANTHROPIC_API_KEY=sk-ant-...
+# MITRITY_AGENT_ID=<uuid>
 # MITRITY_AGENT_KEY=ak_...
 # MITRITY_CONTROL_PLANE_URL=https://api.mitrity.com
-# MITRITY_AGENT_ID=<uuid>
 
 # Run the demo
 docker compose up --build
@@ -82,9 +82,9 @@ The gateway connects to your MITRITY control plane via HTTPS for policy evaluati
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `ANTHROPIC_API_KEY` | Yes | Anthropic API key for Claude |
-| `MITRITY_AGENT_KEY` | Yes | Agent key from dashboard |
-| `MITRITY_CONTROL_PLANE_URL` | Yes | Control plane URL (e.g., `https://api.mitrity.com`) |
 | `MITRITY_AGENT_ID` | Yes | Agent UUID from dashboard |
+| `MITRITY_AGENT_KEY` | Yes | Agent key (`ak_...`) from dashboard |
+| `MITRITY_CONTROL_PLANE_URL` | Yes | Control plane URL (e.g., `https://api.mitrity.com`) |
 | `MITRITY_DEMO_SPEED` | No | `normal` (default) or `fast` (skip pauses) |
 | `ANTHROPIC_MODEL` | No | Claude model (default: `claude-sonnet-4-20250514`) |
 
