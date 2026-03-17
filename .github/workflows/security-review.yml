@@ -1,0 +1,20 @@
+name: Security Review Agent
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - "Dockerfile"
+      - "docker-compose.yml"
+      - "config/**"
+      - "scenario/entrypoint.sh"
+      - "cmd/**"
+      - "demo-tools/**"
+      - "go.mod"
+      - "go.sum"
+      - ".env.example"
+
+jobs:
+  review:
+    uses: mitrity-io/iag-public-ci/.github/workflows/demo-security-review.yml@main
+    secrets: inherit
