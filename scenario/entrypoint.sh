@@ -11,7 +11,8 @@ for var in ANTHROPIC_API_KEY MITRITY_AGENT_KEY MITRITY_CONTROL_PLANE_URL MITRITY
 done
 
 # Export gateway version for the demo runner.
-export MITRITY_GATEWAY_VERSION=$(/usr/local/bin/mitrity-gateway -version 2>/dev/null || echo "unknown")
+MITRITY_GATEWAY_VERSION="$(/usr/local/bin/mitrity-gateway -version 2>/dev/null || echo "unknown")"
+export MITRITY_GATEWAY_VERSION
 
 # Render the gateway config template with env vars.
 envsubst < /etc/mitrity/gateway.yaml.tmpl > /etc/mitrity/gateway.yaml
