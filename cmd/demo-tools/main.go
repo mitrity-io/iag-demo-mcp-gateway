@@ -388,5 +388,5 @@ func writeJSON(f *os.File, v interface{}) {
 		return
 	}
 	b, _ := json.Marshal(v)
-	fmt.Fprintf(f, "%s\n", b)
+	_, _ = fmt.Fprintf(f, "%s\n", b)
 }
