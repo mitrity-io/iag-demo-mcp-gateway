@@ -6,6 +6,7 @@ with the Mitrity Gateway intercepting every tool call.
 
 import json
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -118,7 +119,12 @@ class MCPClient:
         """Shut down the gateway subprocess."""
         if self.process.poll() is None:
             self.process.stdin.close()
-            self.process.wait(timeout=5)
+            self.process.send_signal(signal.SIGTERM)
+            try:
+                self.process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+                self.process.wait(timeout=2)
 
 
 # ---------------------------------------------------------------------------
