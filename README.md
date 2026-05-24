@@ -52,7 +52,7 @@ docker compose up --build
 
 ## What the Demo Does
 
-The demo runs five phases (~10 minutes total):
+The demo runs seven phases (~15 minutes total):
 
 **Phase 1 — Normal Operations**: The agent reads files, lists directories, runs safe commands, and calls APIs. All actions are allowed through the gateway.
 
@@ -64,6 +64,10 @@ The demo runs five phases (~10 minutes total):
 
 **Phase 5 — Escalation & Hold**: The agent attempts a production deployment. The gateway's hold policy pauses the action and creates an approval request in your MITRITY dashboard.
 
+**Phase 6 — Delegation Chains**: The agent records a series of agent-to-agent delegation hops via the `delegate` tool. The gateway's delegation engine flags depth violations (chains > 5 hops) and circular delegation (an agent appearing twice in a chain). Unauthorized-delegate and privilege-escalation sub-scenarios require additional per-agent backend configuration (`disallowed_delegates`, additional registered agents with broader `tool_permissions`); without it those sub-scenarios run as clean delegations. Open `/app/delegation-chains` in the dashboard to inspect.
+
+**Phase 7 — Threat Intelligence**: The agent triggers actions that match threat-intelligence indicators (file reads, shell commands, API calls). The gateway evaluates each match against the tenant's per-severity policy and per-indicator overrides (block / alert / log / silent-suppress). Requires the demo tenant to be subscribed to a threat-indicator feed containing matching patterns; without that seed config the actions appear in the audit log with no threat matches. Open `/app/threat-intel` (Matches + Landscape tabs) to inspect.
+
 ## Architecture
 
 ```
@@ -72,7 +76,8 @@ Docker Container
     └── Mitrity Gateway (MCP server, governed)
         ├── upstream "fs": filesystem tools (read, write, list, delete)
         ├── upstream "shell": command execution
-        └── upstream "api": mock API/database/notification tools
+        ├── upstream "api": mock API/database/notification tools
+        └── upstream "delegate": multi-agent delegation tool (Phase 6)
 ```
 
 The gateway connects to your MITRITY control plane via HTTPS for policy evaluation, event reporting, and heartbeat.
