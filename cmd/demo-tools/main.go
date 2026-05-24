@@ -1,6 +1,13 @@
 // Package main implements MCP tool servers for the MITRITY governance demo.
-// It supports three modes via --mode flag: fs, shell, api.
+// It supports four modes via --mode flag: fs, shell, api, delegate.
 // Each mode exposes different tools over the MCP stdio protocol (JSON-RPC 2.0).
+//
+// The `delegate` mode powers Phase 6 (delegation chains). Its single tool
+// `delegate` is intercepted by the gateway as a delegation event — the
+// gateway reads delegation_chain_id / delegator_agent_id / delegator_agent_name /
+// delegator_mission_scope from the tool args (matching what
+// interceptor.checkDelegation expects on action.Parameters) and runs the
+// chain through the delegation engine.
 package main
 
 import (
@@ -45,7 +52,7 @@ var (
 )
 
 func main() {
-	flag.StringVar(&mode, "mode", "fs", "Tool mode: fs, shell, api")
+	flag.StringVar(&mode, "mode", "fs", "Tool mode: fs, shell, api, delegate")
 	flag.StringVar(&workspace, "workspace", "/workspace", "Workspace root for fs mode")
 	flag.Parse()
 
@@ -215,6 +222,40 @@ func getTools() []tool {
 				},
 			},
 		}
+
+	case "delegate":
+		// The argument names MUST match what the gateway's
+		// interceptor.checkDelegation reads from action.Parameters —
+		// any drift here silently degrades the demo to a regular
+		// allowed action with no chain emitted. The hop fields
+		// (delegator_agent_id, delegator_agent_name,
+		// delegator_mission_scope, delegation_chain_id) are required
+		// in the schema so Claude is reliably prompted to include
+		// them with every call.
+		return []tool{
+			{
+				Name:        "delegate",
+				Description: "Delegate a task to another agent. Records a single hop on a multi-agent delegation chain. Used by Phase 6 to demonstrate depth/circular/unauthorized/escalation enforcement.",
+				InputSchema: map[string]any{
+					"type": "object",
+					"properties": map[string]any{
+						"delegation_chain_id":     map[string]any{"type": "string", "description": "Stable chain identifier. Multiple delegate() calls sharing this ID form a chain."},
+						"delegator_agent_id":      map[string]any{"type": "string", "description": "Agent ID initiating this hop. For chain-extension scenarios, vary this per call to simulate multi-agent hops."},
+						"delegator_agent_name":    map[string]any{"type": "string", "description": "Human-readable name for the delegator. Optional."},
+						"delegator_mission_scope": map[string]any{"type": "string", "description": "Mission scope of the delegator. Optional."},
+						"to_agent_id":             map[string]any{"type": "string", "description": "Recipient agent ID. Becomes the next hop's delegator if the chain continues."},
+						"to_agent_name":           map[string]any{"type": "string", "description": "Human-readable name for the recipient. Optional."},
+						"task":                    map[string]any{"type": "string", "description": "What's being delegated. Free text."},
+					},
+					"required": []string{
+						"delegation_chain_id",
+						"delegator_agent_id",
+						"to_agent_id",
+						"task",
+					},
+				},
+			},
+		}
 	}
 	return nil
 }
@@ -238,6 +279,8 @@ func handleToolCall(req *request) interface{} {
 		result, err = handleShellTool(params.Name, params.Arguments)
 	case "api":
 		result, err = handleAPITool(params.Name, params.Arguments)
+	case "delegate":
+		result, err = handleDelegateTool(params.Name, params.Arguments)
 	default:
 		err = fmt.Errorf("unknown mode: %s", mode)
 	}
@@ -381,6 +424,32 @@ func handleAPITool(name string, args map[string]any) (string, error) {
 	default:
 		return "", fmt.Errorf("unknown api tool: %s", name)
 	}
+}
+
+// --- Delegate tool (Phase 6) ---
+//
+// The gateway intercepts this call BEFORE it reaches demo-tools, reads
+// the delegation_chain_id / delegator_agent_id / etc. from the args,
+// and runs the chain through its delegation engine. By the time we get
+// here the governance decision has already been made — either we're
+// being called because the engine allowed/alerted the hop, or we're
+// not being called at all (block). Either way our mock just
+// acknowledges so Claude has something to continue against.
+func handleDelegateTool(name string, args map[string]any) (string, error) {
+	if name != "delegate" {
+		return "", fmt.Errorf("unknown delegate tool: %s", name)
+	}
+	chainID, _ := args["delegation_chain_id"].(string)
+	from, _ := args["delegator_agent_id"].(string)
+	to, _ := args["to_agent_id"].(string)
+	task, _ := args["task"].(string)
+	return fmt.Sprintf(
+		"[MOCK] Delegation hop recorded.\nchain_id=%s\nfrom=%s\nto=%s\ntask=%s\n"+
+			"The MITRITY gateway evaluated this hop against the agent's delegation policy "+
+			"before this tool ran; check the dashboard's Delegation Chains page to see the "+
+			"chain status and any violation detected.",
+		chainID, from, to, task,
+	), nil
 }
 
 func writeJSON(f *os.File, v interface{}) {
