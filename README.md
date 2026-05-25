@@ -98,6 +98,22 @@ Docker Container
 
 The gateway connects to your MITRITY control plane via HTTPS for policy evaluation, event reporting, and heartbeat.
 
+## Gateway vs Sidecar
+
+Both binaries share the same governance core. Threat intelligence, delegation chains, DLP, prompt injection detection, ML drift scoring, hold/approval workflows, and credential broker injection all run identically in either deployment — they're implemented in a shared `internal/interceptor` package. The architectural difference is **where each sits in the MCP request path**:
+
+| | Mitrity Gateway (this demo) | [MCP Sidecar](https://github.com/mitrity-io/iag-demo-mcp-sidecar) |
+|---|---|---|
+| **Role** | Is the MCP server, aggregating many sources | Transparent proxy in front of one existing MCP server |
+| **Tool sources** | Multiple upstreams + native HTTP tools defined in config | Single upstream subprocess |
+| **MCP protocol** | Owns the catalog, applies namespace prefixes (`fs:read_file`, `shell:run_command`) | Passes through unchanged; intercepts only `tools/call` |
+| **Credential injection** | Arg-rewrite + file mounts + native HTTP headers/URL/body | Arg-rewrite + file mounts |
+| **Best for** | Aggregating many tool sources behind one governed endpoint | Retrofitting governance onto an existing MCP server without changing the agent |
+
+> **Credential broker injection** is **shipped on both binaries** with hot rotation. Both honor heartbeat-etag invalidation so a credential rotated in the dashboard propagates to the running wrapper within 30 seconds without restarting the agent. See [Phase 6 prerequisites](#phase-6-prerequisites-credential-broker) above for the live walkthrough, or [credential-injection-plan-2026-05-25.md](https://github.com/mitrity-io/iag-config/blob/main/credential-injection-plan-2026-05-25.md) for the contract.
+
+> **Multi-agent governance?** See [iag-demo-multi-agent](https://github.com/mitrity-io/iag-demo-multi-agent) for a three-container compose stack showing real agent-to-agent delegation, per-agent threat intel, and per-agent credential scoping.
+
 ## Environment Variables
 
 | Variable | Required | Description |
