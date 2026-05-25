@@ -21,8 +21,6 @@ from phases import (
     phase3_injection,
     phase4_dlp,
     phase5_hold,
-    phase6_delegation,
-    phase7_threat_intel,
 )
 
 # ---------------------------------------------------------------------------
@@ -168,11 +166,9 @@ class DemoAgent:
             response = self.client.messages.create(
                 model=self.model,
                 max_tokens=1024,
-                system="You are an AI agent with access to filesystem, shell, API, and "
-                       "delegate tools. Use the tools provided to accomplish tasks. Be "
-                       "concise in your responses. When the user asks you to delegate, "
-                       "use the delegate tool with the exact arguments provided in the "
-                       "prompt — do not invent IDs or chain identifiers.",
+                system="You are an AI agent with access to filesystem, shell, and API "
+                       "tools. Use the tools provided to accomplish tasks. Be concise "
+                       "in your responses.",
                 tools=self._anthropic_tools,
                 messages=messages,
             )
@@ -276,8 +272,6 @@ def main():
             (3, "Prompt Injection", phase3_injection.run),
             (4, "DLP & Data Protection", phase4_dlp.run),
             (5, "Escalation & Hold", phase5_hold.run),
-            (6, "Delegation Chains", phase6_delegation.run),
-            (7, "Threat Intelligence", phase7_threat_intel.run),
         ]
 
         for num, title, run_fn in phases:
