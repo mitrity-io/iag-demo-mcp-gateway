@@ -27,3 +27,13 @@ logging:
 cache:
   profile_ttl: "1m"
   max_entries: 100
+
+# Phase 6 (credential broker demo) requires injection on. The
+# ${credential:demo_db_password} placeholder in connect_database calls
+# is substituted by the gateway before the upstream tool receives the
+# call. Customers who don't provision the credential in their tenant
+# see Phase 6 fail closed with credential.unresolvable — Phases 1-5
+# run normally regardless.
+credentials:
+  injection_enabled: true
+  cache_ttl_seconds: 30
