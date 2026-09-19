@@ -2,7 +2,7 @@
 
 Self-contained Docker demo that runs a [Claude Agent SDK](https://docs.claude.com/en/docs/agent-sdk) agent through a scripted governance scenario with the Mitrity Gateway on **both** of the agent's entrances:
 
-- **MCP tools** (`read_file`, `run_command`, `call_api`, …) reach the model through the gateway, which the SDK starts as its MCP server. Every `tools/call` is evaluated against your MITRITY policies before the upstream tool sees it.
+- **MCP tools** (`fs__read_file`, `shell__run_command`, `api__call_api`, …) reach the model through the gateway, which the SDK starts as its MCP server. Every `tools/call` is evaluated against your MITRITY policies before the upstream tool sees it.
 - **The SDK's own built-in tools** (`Bash`, `Write`, `Edit`) never produce an MCP call. The [`mitrity`](https://github.com/mitrity-io/mitrity-python) adapter installs a `PreToolUse` hook that admits each one through the gateway's loopback admission API before the SDK runs it — same rules, same command analysis, same DLP, same audit trail (`surface=agent_hook`). If the edge cannot be reached, the call is denied.
 
 ## Prerequisites
@@ -21,24 +21,24 @@ Create an agent (e.g., "demo-agent") with mission scope "workspace file manageme
 
 ### 2. Create policies
 
-Tool patterns name their surface: MCP tools served by the gateway are `mcp:<tool>`, the SDK's built-in tools are `builtin:<tool>`.
+Tool patterns name their surface: MCP tools served by the gateway are `mcp:<namespace>__<tool>` (the upstream's namespace and the tool name joined by a double underscore — `mcp:fs__read_file`), the SDK's built-in tools are `builtin:<tool>`.
 
 | Policy | Type | Tool pattern | Scope |
 |--------|------|--------------|-------|
-| Allow workspace reads | allow | `mcp:read_file`, `mcp:list_directory` | path starts with `/workspace` |
-| Allow workspace writes | allow | `mcp:write_file` | path starts with `/workspace` |
-| Allow safe commands | allow | `mcp:run_command` | resolved commands `ls`, `pwd`, `cat`, `echo`, `whoami` |
-| Block system files | deny | `mcp:read_file`, `mcp:delete_file` | path outside `/workspace` |
-| Block destructive commands | deny | `mcp:run_command` | resolved commands `rm`, `curl`, `wget`, `nc`, `chmod` |
-| Block dangerous SQL | deny | `mcp:query_database` | contains `DROP`, `DELETE`, `TRUNCATE` |
-| Hold production deploys | hold | `mcp:call_api` | url contains "production" |
+| Allow workspace reads | allow | `mcp:fs__read_file`, `mcp:fs__list_directory` | path starts with `/workspace` |
+| Allow workspace writes | allow | `mcp:fs__write_file` | path starts with `/workspace` |
+| Allow safe commands | allow | `mcp:shell__run_command` | resolved commands `ls`, `pwd`, `cat`, `echo`, `whoami` |
+| Block system files | deny | `mcp:fs__read_file`, `mcp:fs__delete_file` | path outside `/workspace` |
+| Block destructive commands | deny | `mcp:shell__run_command` | resolved commands `rm`, `curl`, `wget`, `nc`, `chmod` |
+| Block dangerous SQL | deny | `mcp:api__query_database` | contains `DROP`, `DELETE`, `TRUNCATE` |
+| Hold production deploys | hold | `mcp:api__call_api` | url contains "production" |
 | Block destructive built-ins (phase 8) | deny | `builtin:bash` | resolved commands `rm`, `curl`, `wget`, `nc`, `chmod` |
 
 Also enable:
 - **Prompt injection detection** (global setting)
 - **DLP** with PII and credential patterns — DLP applies to `builtin:write` content with no extra rule.
 
-> **Upgrading from an earlier version of this demo?** Tools used to be served under namespaces (`fs:read_file`, `shell:run_command`, `api:call_api`). Claude Code exposes MCP tools to the model as `mcp__<server>__<tool>`, and the Anthropic API restricts tool names to `[A-Za-z0-9_-]`, so namespaced names cannot be called from the Agent SDK. The gateway now serves bare names; recreate the policies above with `mcp:<tool>` patterns.
+> **Upgrading from an earlier version of this demo?** Tools used to be served as `fs:read_file`, `shell:run_command`, `api:call_api`. Claude Code exposes MCP tools to the model as `mcp__<server>__<tool>`, and the Anthropic API accepts tool names matching `^[a-zA-Z0-9_-]{1,128}$` only, so a colon could never be called from the Agent SDK. The gateway now joins namespace and tool with a double underscore (`fs__read_file`); recreate the policies above with `mcp:<namespace>__<tool>` patterns.
 
 ### 3. Phase 9 (optional): route built-in Bash into the governed shell
 
@@ -110,9 +110,9 @@ Docker Container
     ├── built-in tools: Bash, Write, Edit ── PreToolUse hook (mitrity adapter)
     │                                          └── POST /v1/admit ──► admission API (unix:/run/mitrity/admission.sock)
     └── MCP server "mitrity" = Mitrity Gateway (stdio)
-        ├── upstream "filesystem": read_file, write_file, list_directory, delete_file
-        ├── upstream "shell": run_command
-        └── upstream "api": call_api, query_database, send_notification, connect_database
+        ├── upstream "filesystem" (namespace fs): fs__read_file, fs__write_file, fs__list_directory, fs__delete_file
+        ├── upstream "shell" (namespace shell): shell__run_command
+        └── upstream "api" (namespace api): api__call_api, api__query_database, api__send_notification, api__connect_database
                              ↳ Phase 6 — broker-substituted credential
 ```
 
@@ -128,7 +128,7 @@ Both binaries share the same governance core. Threat intelligence, delegation ch
 |---|---|---|
 | **Role** | Is the MCP server, aggregating many sources | Transparent proxy in front of one existing MCP server |
 | **Tool sources** | Multiple upstreams + native HTTP tools defined in config | Single upstream subprocess |
-| **MCP protocol** | Owns the catalog; can prefix upstream tools with a namespace (`fs:read_file`) where the client allows it | Passes through unchanged; intercepts only `tools/call` |
+| **MCP protocol** | Owns the catalog; prefixes upstream tools with a namespace (`fs__read_file`) | Passes through unchanged; intercepts only `tools/call` |
 | **Admission API** | Served alongside the MCP surface (this demo's phase 8) | Served alongside the proxy |
 | **Credential injection** | Arg-rewrite + file mounts + native HTTP headers/URL/body | Arg-rewrite + file mounts |
 | **Best for** | Aggregating many tool sources behind one governed endpoint | Retrofitting governance onto an existing MCP server without changing the agent |

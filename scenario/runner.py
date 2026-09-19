@@ -3,7 +3,7 @@
 Drives a Claude Agent SDK agent through nine phases of governance testing.
 Two entrances of the MITRITY edge are exercised:
 
-- MCP tools (read_file, run_command, call_api, ...) reach the model through
+- MCP tools (fs__read_file, shell__run_command, api__call_api, ...) reach the model through
   the Mitrity Gateway, which the SDK starts as an MCP server. Every tools/call
   is judged by the gateway before the upstream tool sees it (surface
   mcp_gateway).
@@ -76,7 +76,7 @@ SYSTEM_PROMPT = (
 )
 
 def display_name(tool_name: str) -> str:
-    """`mcp__mitrity__read_file` -> `read_file (gateway)`; built-ins are marked."""
+    """`mcp__mitrity__fs__read_file` -> `fs__read_file (gateway)`; built-ins are marked."""
     prefix = f"mcp__{GATEWAY_NAME}__"
     if tool_name.startswith(prefix):
         return f"{tool_name[len(prefix):]} (gateway)"

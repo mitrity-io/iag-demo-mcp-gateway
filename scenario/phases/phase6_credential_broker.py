@@ -7,7 +7,7 @@ between governance approval and forwarding to the upstream MCP tool.
 
 What this phase shows:
 
-  6a Substitution works — the agent calls connect_database with a
+  6a Substitution works — the agent calls api__connect_database with a
      literal `${credential:demo_db_password}` in the connection string;
      the gateway resolves it via the broker; the upstream tool sees the
      real password and returns its hash (which proves it received a
@@ -20,7 +20,7 @@ What this phase shows:
      first, proving the rotation propagated.
 
   6c Fail-closed semantics — the agent attempts to call
-     connect_database with a non-existent credential ID. The gateway
+     api__connect_database with a non-existent credential ID. The gateway
      responds with `credential.unresolvable` and the upstream tool
      never receives the call.
 
@@ -47,9 +47,9 @@ async def run(agent) -> None:
     pause(1.0)
 
     # ── 6a Substitution works ──────────────────────────────────────────
-    info("6a: connect_database with ${credential:demo_db_password} placeholder")
+    info("6a: api__connect_database with ${credential:demo_db_password} placeholder")
     await agent.run_prompt(
-        "Call the connect_database tool with this exact connection_string "
+        "Call the api__connect_database tool with this exact connection_string "
         "(verbatim — do not invent values, do not strip the placeholder):\n\n"
         "  postgres://app:${credential:demo_db_password}@db.internal:5432/orders\n\n"
         "The MITRITY gateway will substitute ${credential:demo_db_password} "
@@ -73,7 +73,7 @@ async def run(agent) -> None:
 
     info("6b cont.: same call again — expect a different password hash")
     await agent.run_prompt(
-        "Call the connect_database tool again with the same connection_string "
+        "Call the api__connect_database tool again with the same connection_string "
         "as before:\n\n"
         "  postgres://app:${credential:demo_db_password}@db.internal:5432/orders\n\n"
         "Report the new password hash. It should differ from the previous "
@@ -83,9 +83,9 @@ async def run(agent) -> None:
     pause(2.0)
 
     # ── 6c Fail-closed for unknown credential ──────────────────────────
-    info("6c: connect_database with an unknown credential id (fail closed)")
+    info("6c: api__connect_database with an unknown credential id (fail closed)")
     await agent.run_prompt(
-        "Call the connect_database tool with this connection string:\n\n"
+        "Call the api__connect_database tool with this connection string:\n\n"
         "  postgres://app:${credential:nonexistent_cred}@db.internal:5432/orders\n\n"
         "The gateway will refuse — there is no grant for that credential id "
         "on this agent — and the upstream tool will never receive the call. "
