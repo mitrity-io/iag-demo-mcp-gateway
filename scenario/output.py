@@ -51,6 +51,13 @@ def tool_held(tool_name: str, detail: str, duration_ms: int = 0) -> None:
         console.print(f"     [dim]{_truncate(detail, 120)}[/dim]")
 
 
+def tool_routed(tool_name: str, detail: str) -> None:
+    """Log a built-in call the edge routed into the governed shell."""
+    console.print(f"  [magenta]ROUTED[/magenta] {tool_name}")
+    if detail:
+        console.print(f"     [dim]{_truncate(detail, 160)}[/dim]")
+
+
 def agent_message(text: str) -> None:
     """Print agent's reasoning / response."""
     console.print(f"  [blue]Agent:[/blue] {_truncate(text, 200)}")

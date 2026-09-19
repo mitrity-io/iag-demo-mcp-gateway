@@ -4,21 +4,32 @@ api_key: "${MITRITY_AGENT_KEY}"
 control_plane:
   base_url: "${MITRITY_CONTROL_PLANE_URL}"
 
+# Loopback admission API: the second entrance. The Claude Agent SDK's built-in
+# tools (Bash, Write, Edit) never produce an MCP call; the mitrity adapter's
+# PreToolUse hook asks this listener before the SDK runs them. Unix socket and
+# token file live in /run/mitrity (mode 0700, created by entrypoint.sh).
+admission:
+  enabled: true
+  listen_addr: "unix:/run/mitrity/admission.sock"
+  token_file: "/run/mitrity/admission.token"
+
+# Upstream tools are served under their bare names (read_file, run_command,
+# call_api, ...). Claude Code exposes MCP tools to the model as
+# mcp__<server>__<tool>, and the Anthropic API restricts tool names to
+# [A-Za-z0-9_-], so a namespaced name such as fs:read_file cannot be called
+# from the Agent SDK. Policies target them as mcp:<tool> (see README).
 upstreams:
   - name: "filesystem"
     command: "/usr/local/bin/demo-tools"
     args: ["--mode", "fs", "--workspace", "/workspace"]
-    namespace: "fs"
 
   - name: "shell"
     command: "/usr/local/bin/demo-tools"
     args: ["--mode", "shell"]
-    namespace: "shell"
 
   - name: "api"
     command: "/usr/local/bin/demo-tools"
     args: ["--mode", "api"]
-    namespace: "api"
 
 logging:
   level: "info"

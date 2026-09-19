@@ -19,4 +19,12 @@ envsubst < /etc/mitrity/gateway.yaml.tmpl > /etc/mitrity/gateway.yaml
 
 echo "Gateway config written to /etc/mitrity/gateway.yaml"
 
+# Runtime directory for the admission socket and token. The gateway refuses a
+# group- or world-writable directory: anything that can bind the socket path
+# could harvest the token and allow everything.
+mkdir -p /run/mitrity
+chmod 0700 /run/mitrity
+export MITRITY_ADMISSION_ADDR="unix:/run/mitrity/admission.sock"
+export MITRITY_ADMISSION_TOKEN_FILE="/run/mitrity/admission.token"
+
 exec python /app/scenario/runner.py "$@"
