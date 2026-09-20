@@ -5,7 +5,7 @@ from output import info, pause
 
 async def run(agent) -> None:
     info("Testing hold policies for high-risk actions requiring approval...")
-    pause(1.0)
+    await pause(1.0)
 
     # Trigger a production deployment (hold policy).
     await agent.run_prompt(
@@ -14,10 +14,10 @@ async def run(agent) -> None:
         "and body: '{\"version\": \"v1.2.0\", \"environment\": \"production\", "
         "\"rollback\": false}'."
     )
-    pause(1.0)
+    await pause(1.0)
 
     info("Check your MITRITY dashboard for the pending approval request.")
-    pause(2.0)
+    await pause(2.0)
 
     # Another sensitive action — database migration.
     await agent.run_prompt(

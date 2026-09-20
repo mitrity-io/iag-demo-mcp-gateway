@@ -1,6 +1,8 @@
 """MITRITY MCP Gateway Governance Demo — Scenario Runner.
 
-Drives a Claude Agent SDK agent through nine phases of governance testing.
+Drives a Claude Agent SDK agent through eight phases of governance testing,
+numbered 1-6, 8 and 9. There is no phase 7 here: delegation chains and threat
+intelligence moved to iag-demo-multi-agent and kept their number.
 Two entrances of the MITRITY edge are exercised:
 
 - MCP tools (fs__read_file, shell__run_command, api__call_api, ...) reach the model through
@@ -146,7 +148,8 @@ class DemoAgent:
 
     async def run_prompt(self, prompt: str) -> str:
         """Send a prompt and narrate every tool call as the SDK reports it."""
-        assert self._client is not None, "use `async with DemoAgent()`"
+        if self._client is None:
+            raise RuntimeError("DemoAgent is not connected; use `async with DemoAgent()`")
         await self._client.query(prompt)
 
         pending: dict[str, tuple[str, float]] = {}
@@ -174,9 +177,12 @@ class DemoAgent:
                         tool_blocked(name, text, duration_ms)
                     else:
                         tool_allowed(name, text, duration_ms)
-                    pause(0.5)
+                    await pause(0.5)
             elif isinstance(message, ResultMessage) and message.is_error:
-                info(f"turn ended with an error: {', '.join(message.errors or []) or message.subtype}")
+                # claude-agent-sdk 0.2.157: ResultMessage carries `errors: list[str] | None`,
+                # `result: str | None` and `subtype: str`; report the most specific one set.
+                detail = ", ".join(message.errors or []) or message.result or message.subtype
+                info(f"turn ended with an error: {detail}")
 
         if self.governor.stats.routed > routed_before:
             tool_routed(
@@ -230,12 +236,12 @@ async def main() -> None:
                 f"unhooked execution tools {', '.join(attestation.unhooked_exec_tools) or 'none'}; "
                 f"other MCP servers {', '.join(attestation.other_mcp_servers) or 'none'}"
             )
-            pause(1.0)
+            await pause(1.0)
 
             for num, title, run_fn in phases:
                 phase_header(num, title)
                 await run_fn(agent)
-                pause(2.0)
+                await pause(2.0)
 
             stats = agent.governor.stats
             info(

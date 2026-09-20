@@ -37,14 +37,14 @@ itself.
 
 """
 
-import time
+import asyncio
 
 from output import info, pause
 
 
 async def run(agent) -> None:
     info("Demonstrating credential broker + hot rotation...")
-    pause(1.0)
+    await pause(1.0)
 
     # ── 6a Substitution works ──────────────────────────────────────────
     info("6a: api__connect_database with ${credential:demo_db_password} placeholder")
@@ -56,7 +56,7 @@ async def run(agent) -> None:
         "with the broker-resolved value before the tool receives the call. "
         "Report the password hash from the tool's response."
     )
-    pause(2.0)
+    await pause(2.0)
 
     # ── 6b Hot rotation ────────────────────────────────────────────────
     info(
@@ -65,11 +65,13 @@ async def run(agent) -> None:
         "then press Enter to continue. The gateway will pick up the new "
         "value on its next heartbeat (≤30s)."
     )
+    # Both waits run off the event loop: the SDK's transport tasks keep
+    # draining the CLI subprocess while the operator rotates the credential.
     try:
-        input()  # nosec — interactive demo prompt, not security-sensitive
+        await asyncio.to_thread(input)  # nosec — interactive demo prompt, not security-sensitive
     except EOFError:
         info("(non-interactive mode — waiting 35s for heartbeat instead)")
-        time.sleep(35)
+        await asyncio.sleep(35)
 
     info("6b cont.: same call again — expect a different password hash")
     await agent.run_prompt(
@@ -80,7 +82,7 @@ async def run(agent) -> None:
         "one — proving the rotation propagated to the running gateway "
         "without restarting the agent."
     )
-    pause(2.0)
+    await pause(2.0)
 
     # ── 6c Fail-closed for unknown credential ──────────────────────────
     info("6c: api__connect_database with an unknown credential id (fail closed)")
@@ -91,7 +93,7 @@ async def run(agent) -> None:
         "on this agent — and the upstream tool will never receive the call. "
         "The error code is credential.unresolvable (JSON-RPC code -32002)."
     )
-    pause(1.0)
+    await pause(1.0)
 
     info(
         "Phase 6 complete. Audit the credential.used events in your "
