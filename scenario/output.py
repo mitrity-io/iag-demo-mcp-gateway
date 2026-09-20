@@ -1,7 +1,7 @@
 """Terminal output formatting for the MITRITY governance demo."""
 
+import asyncio
 import os
-import time
 
 from rich.console import Console
 from rich.panel import Panel
@@ -51,6 +51,13 @@ def tool_held(tool_name: str, detail: str, duration_ms: int = 0) -> None:
         console.print(f"     [dim]{_truncate(detail, 120)}[/dim]")
 
 
+def tool_routed(tool_name: str, detail: str) -> None:
+    """Log a built-in call the edge routed into the governed shell."""
+    console.print(f"  [magenta]ROUTED[/magenta] {tool_name}")
+    if detail:
+        console.print(f"     [dim]{_truncate(detail, 160)}[/dim]")
+
+
 def agent_message(text: str) -> None:
     """Print agent's reasoning / response."""
     console.print(f"  [blue]Agent:[/blue] {_truncate(text, 200)}")
@@ -83,11 +90,11 @@ def print_summary() -> None:
     console.print()
 
 
-def pause(seconds: float = 1.0) -> None:
-    """Pause between actions. Skipped in fast mode."""
+async def pause(seconds: float = 1.0) -> None:
+    """Pause between actions without blocking the event loop. Skipped in fast mode."""
     if os.environ.get("MITRITY_DEMO_SPEED") == "fast":
         return
-    time.sleep(seconds)
+    await asyncio.sleep(seconds)
 
 
 def _truncate(text: str, max_len: int) -> str:
