@@ -19,9 +19,10 @@ envsubst < /etc/mitrity/gateway.yaml.tmpl > /etc/mitrity/gateway.yaml
 
 echo "Gateway config written to /etc/mitrity/gateway.yaml"
 
-# Runtime directory for the admission socket and token. The gateway refuses a
-# group- or world-writable directory: anything that can bind the socket path
-# could harvest the token and allow everything.
+# Runtime directory for the admission socket and token. The Dockerfile creates
+# it owned by the demo user; this only re-asserts mode 0700. The gateway refuses
+# a directory it does not own or that is group- or world-writable: anything
+# that can bind the socket path could harvest the token and allow everything.
 mkdir -p /run/mitrity
 chmod 0700 /run/mitrity
 export MITRITY_ADMISSION_ADDR="unix:/run/mitrity/admission.sock"
