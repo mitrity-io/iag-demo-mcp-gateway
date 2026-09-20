@@ -62,7 +62,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-> **Until `mitrity` is on PyPI** the image installs the adapter from a pinned git ref of `mitrity-io/mitrity-python` (see `MITRITY_PYTHON_SPEC` in the Dockerfile), which needs access to that repository at build time. Once published, the swap is one build argument: `docker compose build --build-arg MITRITY_PYTHON_SPEC='mitrity[claude-agent-sdk]==0.1.0'`.
+> The image installs the adapter from PyPI, pinned to `mitrity[claude-agent-sdk]==0.2.0` (see `MITRITY_PYTHON_SPEC` in the Dockerfile). Another version is one build argument away: `docker compose build --build-arg MITRITY_PYTHON_SPEC='mitrity[claude-agent-sdk]==X.Y.Z'`.
 
 ## What the Demo Does
 

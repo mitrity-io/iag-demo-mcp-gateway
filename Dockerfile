@@ -27,10 +27,9 @@ COPY workspace/ /workspace/
 # The Claude Agent SDK wheel bundles the Claude Code runtime; no Node.js needed.
 RUN pip install --no-cache-dir -r /app/scenario/requirements.txt
 
-# The MITRITY adapter. Until the first PyPI release this is a pinned git ref of
-# github.com/mitrity-io/mitrity-python; swap it for `mitrity[claude-agent-sdk]==<version>`
-# once published (docker compose build --build-arg MITRITY_PYTHON_SPEC=...).
-ARG MITRITY_PYTHON_SPEC="mitrity[claude-agent-sdk] @ git+https://github.com/mitrity-io/mitrity-python.git@fef2cdcb61d6b7b2b878c0955844ce2496453ab5"
+# The MITRITY adapter from PyPI, pinned to a release. Override for another version:
+# docker compose build --build-arg MITRITY_PYTHON_SPEC='mitrity[claude-agent-sdk]==X.Y.Z'.
+ARG MITRITY_PYTHON_SPEC="mitrity[claude-agent-sdk]==0.2.0"
 RUN pip install --no-cache-dir "$MITRITY_PYTHON_SPEC"
 
 # Runtime directory for the admission socket and token (mode 0700, see entrypoint.sh).
