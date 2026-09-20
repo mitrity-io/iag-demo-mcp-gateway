@@ -3,7 +3,7 @@
 Self-contained Docker demo that runs a [Claude Agent SDK](https://docs.claude.com/en/docs/agent-sdk) agent through a scripted governance scenario with the Mitrity Gateway on **both** of the agent's entrances:
 
 - **MCP tools** (`fs__read_file`, `shell__run_command`, `api__call_api`, …) reach the model through the gateway, which the SDK starts as its MCP server. Every `tools/call` is evaluated against your MITRITY policies before the upstream tool sees it.
-- **The SDK's own built-in tools** (`Bash`, `Write`, `Edit`) never produce an MCP call. The [`mitrity`](https://github.com/mitrity-io/mitrity-python) adapter installs a `PreToolUse` hook that admits each one through the gateway's loopback admission API before the SDK runs it — same rules, same command analysis, same DLP, same audit trail (`surface=agent_hook`). If the edge cannot be reached, the call is denied.
+- **The SDK's own built-in tools** (`Bash`, `Write`, `Edit`) never produce an MCP call. The [`mitrity`](https://github.com/mitrity-io/mitrity-python) adapter installs a `PreToolUse` hook that admits each one through the gateway's loopback admission API before the SDK runs it — same rules, same command analysis, same DLP, same audit trail (`surface=agent_hook`). If the edge cannot be reached, the call is denied. The SDK's file-reading built-ins (`Read`, `Glob`, `Grep`) are not enabled: the adapter does not hook them, so the gateway's `fs__read_file` and `fs__list_directory` are the only file access and every read is judged.
 
 ## Prerequisites
 
@@ -109,6 +109,7 @@ Docker Container
 └── Python scenario runner (Claude Agent SDK, ClaudeSDKClient)
     ├── built-in tools: Bash, Write, Edit ── PreToolUse hook (mitrity adapter)
     │                                          └── POST /v1/admit ──► admission API (unix:/run/mitrity/admission.sock)
+    │   (Read, Glob, Grep are disallowed — the model reads files through the gateway)
     └── MCP server "mitrity" = Mitrity Gateway (stdio)
         ├── upstream "filesystem" (namespace fs): fs__read_file, fs__write_file, fs__list_directory, fs__delete_file
         ├── upstream "shell" (namespace shell): shell__run_command
@@ -116,7 +117,7 @@ Docker Container
                              ↳ Phase 6 — broker-substituted credential
 ```
 
-One gateway process serves both entrances: the MCP `tools/call` stream from the SDK and the loopback admission API the hook calls. It connects to your MITRITY control plane over HTTPS for policy evaluation, event reporting and heartbeat, and attests the runtime's posture (which built-in tools are hooked, which are not, other MCP servers, permission mode) so the dashboard can show honest coverage.
+One gateway process serves both entrances: the MCP `tools/call` stream from the SDK and the loopback admission API the hook calls. It connects to your MITRITY control plane over HTTPS for policy evaluation, event reporting and heartbeat, and attests the runtime's posture (which built-in tools are hooked, which are not, which are disallowed, other MCP servers, permission mode) so the dashboard can show honest coverage.
 
 The adapter is `mitrity.claude_agent_sdk.Governor` — see [`scenario/runner.py`](scenario/runner.py) for the ~20 lines that wire it up, and [iag-specs/sentinel/adapters.md](https://github.com/mitrity-io/iag-specs/blob/main/sentinel/adapters.md) for what it guarantees.
 
@@ -149,8 +150,12 @@ Both binaries share the same governance core. Threat intelligence, delegation ch
 | `ANTHROPIC_MODEL` | No | Claude model (default: `claude-sonnet-5`) |
 | `MITRITY_DEMO_FORCE_PHASE9` | No | `1` runs phase 9 even when the gateway version does not advertise the governed shell |
 
+## Troubleshooting
+
+- **The container exits with `ERROR: /run/mitrity ...`** — the admission runtime directory is missing or owned by another uid. The image creates it for `demo` (uid 1000), mode 0700; a tmpfs mounted on `/run` or a `user:` override in `docker-compose.yml` changes that. Create the directory for the container user (mode 0700) or drop the override.
+
 ## Customization
 
-- **Workspace**: Mount your own files via `volumes` in `docker-compose.yml`. The container runs as the unprivileged user `demo` (uid 1000); on a Linux host, make the mounted directory writable by that uid, or set `user:` in `docker-compose.yml` to match its owner
+- **Workspace**: Mount your own files via `volumes` in `docker-compose.yml`. The container runs as the unprivileged user `demo` (uid 1000); on a Linux host, make the mounted directory writable by that uid, or set `user:` in `docker-compose.yml` to match its owner — in which case `/run/mitrity` must be owned by that user too (see Troubleshooting)
 - **Policies**: Modify policies in the MITRITY dashboard to see different behaviors
 - **Scenarios**: Edit files in `scenario/phases/` to add custom test prompts

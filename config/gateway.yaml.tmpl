@@ -1,3 +1,5 @@
+# Rendered by entrypoint.sh into /etc/mitrity/gateway.yaml, mode 0600: the
+# rendered file carries the agent key.
 agent_id: "${MITRITY_AGENT_ID}"
 api_key: "${MITRITY_AGENT_KEY}"
 
@@ -7,7 +9,8 @@ control_plane:
 # Loopback admission API: the second entrance. The Claude Agent SDK's built-in
 # tools (Bash, Write, Edit) never produce an MCP call; the mitrity adapter's
 # PreToolUse hook asks this listener before the SDK runs them. Unix socket and
-# token file live in /run/mitrity (mode 0700, created by entrypoint.sh).
+# token file live in /run/mitrity (mode 0700, owned by the demo user; created
+# by the Dockerfile; entrypoint.sh checks the ownership and re-asserts the mode).
 admission:
   enabled: true
   listen_addr: "unix:/run/mitrity/admission.sock"

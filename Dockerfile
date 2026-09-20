@@ -36,9 +36,9 @@ RUN pip install --no-cache-dir "$MITRITY_PYTHON_SPEC"
 # Linux host, so the bind-mounted ./workspace stays writable there (Docker
 # Desktop maps ownership itself). The gateway refuses an admission runtime
 # directory it does not own, so /run/mitrity is created for this user before
-# the switch (mode 0700; entrypoint.sh only re-asserts it). /etc/mitrity takes
-# the rendered gateway.yaml, /workspace the agent's files and the gateway's
-# transport key, and $HOME the Claude Code session state.
+# the switch (mode 0700; entrypoint.sh checks the ownership and re-asserts the
+# mode). /etc/mitrity takes the rendered gateway.yaml, /workspace the agent's
+# files and the gateway's transport key, and $HOME the Claude Code session state.
 RUN groupadd --gid 1000 demo \
     && useradd --uid 1000 --gid demo --create-home demo \
     && mkdir -p /run/mitrity \
