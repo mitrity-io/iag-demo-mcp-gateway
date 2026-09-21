@@ -119,7 +119,7 @@ Docker Container
 
 One gateway process serves both entrances: the MCP `tools/call` stream from the SDK and the loopback admission API the hook calls. It connects to your MITRITY control plane over HTTPS for policy evaluation, event reporting and heartbeat, and attests the runtime's posture (which built-in tools are hooked, which are not, which are disallowed, other MCP servers, permission mode) so the dashboard can show honest coverage.
 
-The adapter is `mitrity.claude_agent_sdk.Governor` — see [`scenario/runner.py`](scenario/runner.py) for the ~20 lines that wire it up, and [iag-specs/sentinel/adapters.md](https://github.com/mitrity-io/iag-specs/blob/main/sentinel/adapters.md) for what it guarantees.
+The adapter is `mitrity.claude_agent_sdk.Governor` — see [`scenario/runner.py`](scenario/runner.py) for the ~20 lines that wire it up, and [the Framework Adapters contract](https://mitrity.com/docs/integrations/adapters) for what it guarantees.
 
 ## Gateway vs Sidecar
 
@@ -134,7 +134,7 @@ Both binaries share the same governance core. Threat intelligence, delegation ch
 | **Credential injection** | Arg-rewrite + file mounts + native HTTP headers/URL/body | Arg-rewrite + file mounts |
 | **Best for** | Aggregating many tool sources behind one governed endpoint | Retrofitting governance onto an existing MCP server without changing the agent |
 
-> **Credential broker injection** is **shipped on both binaries** with hot rotation. Both honor heartbeat-etag invalidation so a credential rotated in the dashboard propagates to the running wrapper within 30 seconds without restarting the agent. See [Phase 6 prerequisites](#phase-6-prerequisites-credential-broker) above for the live walkthrough, or [credential-injection-plan-2026-05-25.md](https://github.com/mitrity-io/iag-config/blob/main/credential-injection-plan-2026-05-25.md) for the contract.
+> **Credential broker injection** is **shipped on both binaries** with hot rotation. Both honor heartbeat-etag invalidation so a credential rotated in the dashboard propagates to the running wrapper within 30 seconds without restarting the agent. See [Phase 6 prerequisites](#phase-6-prerequisites-credential-broker) above for the live walkthrough, or [the Credential Broker documentation](https://mitrity.com/docs/security/credential-broker) for the contract.
 
 > **Multi-agent governance?** See [iag-demo-multi-agent](https://github.com/mitrity-io/iag-demo-multi-agent) for a three-container compose stack showing real agent-to-agent delegation, per-agent threat intel, and per-agent credential scoping.
 

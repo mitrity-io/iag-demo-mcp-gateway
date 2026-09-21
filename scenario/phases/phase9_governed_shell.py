@@ -26,8 +26,9 @@ gateway from `ghcr.io/mitrity-io/mitrity-mcp-gateway:latest`; until that tag
 carries the governed shell, this phase prints what it will demonstrate and
 skips. Set MITRITY_DEMO_FORCE_PHASE9=1 to run it anyway.
 
-Contract: iag-specs sentinel/admission-api.md ("Routed Bash") and
-architecture/governed-shell.md.
+Contract: the Admission API documentation ("Routed Bash",
+https://mitrity.com/docs/integrations/admission-api) and the governed shell page
+(https://mitrity.com/docs/edge/governed-shell).
 """
 
 from output import info, pause
