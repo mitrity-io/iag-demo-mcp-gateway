@@ -134,7 +134,7 @@ Both binaries share the same governance core. Threat intelligence, delegation ch
 | **Credential injection** | Arg-rewrite + file mounts + native HTTP headers/URL/body | Arg-rewrite + file mounts |
 | **Best for** | Aggregating many tool sources behind one governed endpoint | Retrofitting governance onto an existing MCP server without changing the agent |
 
-> **Credential broker injection** is **shipped on both binaries** with hot rotation. Both honor heartbeat-etag invalidation so a credential rotated in the dashboard propagates to the running wrapper within 30 seconds without restarting the agent. See [Phase 6 prerequisites](#phase-6-prerequisites-credential-broker) above for the live walkthrough, or [credential-injection-plan-2026-05-25.md](https://github.com/mitrity-io/iag-config/blob/main/credential-injection-plan-2026-05-25.md) for the contract.
+> **Credential broker injection** is **shipped on both binaries** with hot rotation. Both honor heartbeat-etag invalidation so a credential rotated in the dashboard propagates to the running wrapper within 30 seconds without restarting the agent. See [Phase 6 prerequisites](#phase-6-prerequisites-credential-broker) above for the live walkthrough, or [the Credential Broker documentation](https://mitrity.com/docs/security/credential-broker) for the contract.
 
 > **Multi-agent governance?** See [iag-demo-multi-agent](https://github.com/mitrity-io/iag-demo-multi-agent) for a three-container compose stack showing real agent-to-agent delegation, per-agent threat intel, and per-agent credential scoping.
 
