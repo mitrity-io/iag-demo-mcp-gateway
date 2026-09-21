@@ -119,7 +119,7 @@ Docker Container
 
 One gateway process serves both entrances: the MCP `tools/call` stream from the SDK and the loopback admission API the hook calls. It connects to your MITRITY control plane over HTTPS for policy evaluation, event reporting and heartbeat, and attests the runtime's posture (which built-in tools are hooked, which are not, which are disallowed, other MCP servers, permission mode) so the dashboard can show honest coverage.
 
-The adapter is `mitrity.claude_agent_sdk.Governor` — see [`scenario/runner.py`](scenario/runner.py) for the ~20 lines that wire it up, and [iag-specs/sentinel/adapters.md](https://github.com/mitrity-io/iag-specs/blob/main/sentinel/adapters.md) for what it guarantees.
+The adapter is `mitrity.claude_agent_sdk.Governor` — see [`scenario/runner.py`](scenario/runner.py) for the ~20 lines that wire it up, and [the Framework Adapters contract](https://mitrity.com/docs/integrations/adapters) for what it guarantees.
 
 ## Gateway vs Sidecar
 
