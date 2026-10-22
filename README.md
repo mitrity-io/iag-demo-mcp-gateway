@@ -66,7 +66,7 @@ docker compose up --build
 
 ## What the Demo Does
 
-The demo runs eight phases, numbered 1–6, 8 and 9 (~15 minutes total). There is no phase 7 here: delegation chains and threat intelligence moved to [iag-demo-multi-agent](https://github.com/mitrity-io/iag-demo-multi-agent) and kept their number.
+The demo runs eight phases, numbered 1–6, 8 and 9 (~15 minutes total). There is no phase 7 here: delegation chains moved to [iag-demo-multi-agent](https://github.com/mitrity-io/iag-demo-multi-agent) and kept their number.
 
 **Phase 1 — Normal Operations**: The agent reads files, lists directories, runs safe commands, and calls APIs. All actions are allowed through the gateway.
 
@@ -84,7 +84,7 @@ The demo runs eight phases, numbered 1–6, 8 and 9 (~15 minutes total). There i
 
 **Phase 9 — Governed Shell**: With `builtin_exec_routing: governed_shell`, an allowed built-in `Bash` is not executed by the SDK at all: the hook rewrites it to `mitrity-hook exec <ticket>`, the gateway runs the judged bytes in its own sandbox, and egress to a host outside the agent's destination allowlist is refused by the governed shell's proxy. The audit event carries `execution_result.sandbox_mode` and the egress counters. *Requires sentinel ≥ v0.21.0*; skipped with a notice on older gateways.
 
-> **Delegation chains and threat intelligence** (the former phase 7) are demonstrated in a separate, multi-container demo at [iag-demo-multi-agent](https://github.com/mitrity-io/iag-demo-multi-agent). That demo runs three governed agents in parallel containers (orchestrator + two workers) and produces real worker-to-worker delegation hops and threat-intel matches against the built-in indicator catalog. Pro/Enterprise plan required.
+> **Delegation chains** (the former phase 7) are demonstrated in a separate, multi-container demo at [iag-demo-multi-agent](https://github.com/mitrity-io/iag-demo-multi-agent). That demo runs three governed agents in parallel containers (orchestrator + two workers) and produces real worker-to-worker delegation hops, each judged for privilege escalation, chain depth and cycles. Pro/Enterprise plan required.
 
 ### Phase 6 prerequisites (credential broker)
 
@@ -136,7 +136,7 @@ Both binaries share the same governance core. Threat intelligence, delegation ch
 
 > **Credential broker injection** is **shipped on both binaries** with hot rotation. Both honor heartbeat-etag invalidation so a credential rotated in the dashboard propagates to the running wrapper within 30 seconds without restarting the agent. See [Phase 6 prerequisites](#phase-6-prerequisites-credential-broker) above for the live walkthrough, or [the Credential Broker documentation](https://mitrity.com/docs/security/credential-broker) for the contract.
 
-> **Multi-agent governance?** See [iag-demo-multi-agent](https://github.com/mitrity-io/iag-demo-multi-agent) for a three-container compose stack showing real agent-to-agent delegation, per-agent threat intel, and per-agent credential scoping.
+> **Multi-agent governance?** See [iag-demo-multi-agent](https://github.com/mitrity-io/iag-demo-multi-agent) for a three-container compose stack showing real agent-to-agent delegation, per-agent privilege boundaries, and per-agent credential scoping.
 
 ## Environment Variables
 
